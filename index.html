@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>KCNX OS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { margin:0; overflow:hidden; font-family:Segoe UI; background:black; color:white; }
+
+/* Boot */
+#boot {
+  position:fixed;width:100%;height:100%;background:black;
+  display:flex;justify-content:center;align-items:center;flex-direction:column;
+  transition:opacity 2s;
+}
+#logo { font-size:60px;letter-spacing:8px;opacity:0;transition:2s;}
+#sub {opacity:0;margin-top:10px;transition:2s;}
+
+/* Topbar */
+#topbar {
+  display: none;
+  position:fixed;
+  top:0;
+  width:100%;
+  height:30px;
+  background:rgba(0,0,0,0.6);
+  justify-content:space-between;
+  align-items:center;
+  padding:0 10px;
+  font-size:13px;
+
+}
+
+/* Network */
+.bar{display:inline-block;width:3px;margin:1px;background:white}
+.b1{height:5px}.b2{height:8px}.b3{height:11px}.b4{height:14px}
+
+/* Battery */
+#battery{width:25px;height:10px;border:1px solid white}
+#level{height:100%;background:green;width:100%}
+
+/* Desktop */
+#desktop {
+  display:none;width:100vw;height:100vh;
+  background:linear-gradient(#0a0a0a,#1e1e2f);
+  padding:40px 10px;
+  display:flex;flex-wrap:wrap;
+}
+
+/* Icons */
+.icon {
+  width:80px;text-align:center;margin:10px;cursor:pointer;font-size:24px;
+}
+.icon span {display:block;font-size:12px}
+
+/* Window */
+.window {
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:#1e1e2f;
+}
+
+/* Titlebar */
+.titlebar {
+  background:#00ffcc;padding:10px;
+  display:flex;justify-content:space-between;font-weight:bold;
+}
+
+/* Content */
+.content {height:calc(100% - 50px);padding:10px;overflow:auto}
+
+/* Calculator */
+.calc button {
+  width:22%;height:45px;margin:2px;font-size:16px;
+}
+.calc input {
+  width:95%;height:40px;font-size:18px;margin-bottom:5px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Boot -->
+<div id="boot">
+  <div id="logo">KCNX</div>
+  <div id="sub">Kedlestone Cartes Normal Xenodocial</div>
+</div>
+
+<!-- Topbar -->
+<div id="topbar">
+  <div>
+    <span class="bar b1"></span>
+    <span class="bar b2"></span>
+    <span class="bar b3"></span>
+    <span class="bar b4"></span> 4G
+  </div>
+
+  <div id="time"></div>
+
+  <div style="display:flex;align-items:center">
+    <div id="battery"><div id="level"></div></div>
+  </div>
+</div>
+
+<!-- Desktop -->
+<div id="desktop">
+
+<div class="icon" onclick="openApp('notepad')">📝<span>Notepad</span></div>
+<div class="icon" onclick="openApp('calc')">🧮<span>Calculator</span></div>
+<div class="icon" onclick="openApp('browser')">🌐<span>Browser</span></div>
+<div class="icon" onclick="openApp('recycle')">🗑️<span>Recycle</span></div>
+
+<div class="icon" onclick="openGames()">🎮<span>Games</span></div>
+<div class="icon" onclick="openFiles()">📁<span>Files</span></div>
+
+</div>
+
+<audio id="audio" src="https://files.catbox.moe/qmismt.mp3"></audio>
+
+<script>
+
+/* Boot */
+setTimeout(()=>{logo.style.opacity=1;sub.style.opacity=1},6000);
+setTimeout(()=>boot.style.opacity=0,12000);
+setTimeout(()=>{
+  boot.style.display="none";
+  desktop.style.display="flex";
+  topbar.style.display="flex";   // 👈 ADD THIS LINE
+  audio.currentTime=15;
+  audio.play().catch(()=>{});
+},15000);
+
+/* Time */
+setInterval(()=>{
+let d=new Date();
+time.innerText=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+},1000);
+
+/* Battery */
+let lvl=100;
+setInterval(()=>{
+lvl--; if(lvl<0) lvl=100;
+level.style.width=lvl+"%";
+
+if(lvl>50) level.style.background="green";
+else if(lvl>20) level.style.background="yellow";
+else level.style.background="red";
+
+},5000);
+
+/* Apps */
+function openApp(app){
+let win=document.createElement("div");
+win.className="window";
+
+let bar=document.createElement("div");
+bar.className="titlebar";
+bar.innerHTML=app+" <span onclick='this.parentElement.parentElement.remove()'>❌</span>";
+
+let content=document.createElement("div");
+content.className="content";
+
+/* Notepad */
+if(app=="notepad"){
+content.innerHTML=`
+<button onclick="saveNote()">💾 Save</button>
+<textarea id="note" style="width:100%;height:90%"></textarea>`;
+setTimeout(()=>note.value=localStorage.note||"",100);
+}
+
+/* Calculator */
+if(app=="calc"){
+content.innerHTML=`
+<div class="calc">
+<input id="display"><br>
+<button onclick="clearAll()">AC</button>
+<button onclick="del()">DEL</button>
+<button onclick="add('(')">(</button>
+<button onclick="add(')')">)</button><br>
+
+<button onclick="add('7')">7</button>
+<button onclick="add('8')">8</button>
+<button onclick="add('9')">9</button>
+<button onclick="add('/')">÷</button><br>
+
+<button onclick="add('4')">4</button>
+<button onclick="add('5')">5</button>
+<button onclick="add('6')">6</button>
+<button onclick="add('*')">×</button><br>
+
+<button onclick="add('1')">1</button>
+<button onclick="add('2')">2</button>
+<button onclick="add('3')">3</button>
+<button onclick="add('-')">−</button><br>
+
+<button onclick="add('0')">0</button>
+<button onclick="add('.')">.</button>
+<button onclick="calculate()">=</button>
+<button onclick="add('+')">+</button><br>
+
+<button onclick="add('Math.sqrt(')">√</button>
+<button onclick="add('Math.sin(')">sin</button>
+<button onclick="add('Math.cos(')">cos</button>
+<button onclick="add('Math.tan(')">tan</button>
+</div>`;
+}
+
+/* Browser */
+if(app=="browser"){
+content.innerHTML=`
+<input id="url" placeholder="Enter site (google, youtube...)">
+<button onclick="go()">Go</button>`;
+}
+
+/* Recycle */
+if(app=="recycle"){
+content.innerHTML="<h3>Recycle Bin</h3><p>Empty 🗑️</p>";
+}
+
+win.appendChild(bar);
+win.appendChild(content);
+desktop.appendChild(win);
+}
+
+/* Notepad */
+function saveNote(){
+localStorage.note=note.value;
+alert("Saved!");
+}
+
+/* Calculator */
+function add(v){display.value+=v;}
+function clearAll(){display.value="";}
+function del(){display.value=display.value.slice(0,-1);}
+function calculate(){
+try{display.value=eval(display.value);}
+catch{alert("Error")}
+}
+
+/* Browser */
+function go(){
+let u=url.value.trim();
+if(!u.startsWith("http")) u="https://www."+u+".com";
+window.open(u,"_blank");
+}
+
+/* External apps */
+function openGames(){
+window.open("https://kbhgames.com/engine/html5","_blank");
+}
+function openFiles(){
+window.open("https://www.xxxxxxxx.com","_blank");
+}
+
+</script>
+
+</body>
+</html>
+
+
